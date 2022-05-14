@@ -17,11 +17,12 @@ TIME_TAG = 0x9003
 temps = {}
 
 for filename in os.walk(TEMP_FOLDER):
-    with open(filename, 'r') as f:
-        for line in f.readlines():
-            time, temp = line.strip().split(" - ")
-            time = parser.parse(time)
-            temps[time] = temp # just store as a string
+    if filename.endswith(".txt"):
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                time, temp = line.strip().split(" - ")
+                time = parser.parse(time)
+                temps[time] = temp # just store as a string
 
 for filename in os.listdir(DARK_FOLDER):
     src = f"{DARK_FOLDER}/{filename}"
