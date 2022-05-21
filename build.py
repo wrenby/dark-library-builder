@@ -10,7 +10,7 @@ import os
 
 TEMP_FOLDER = "./temps"
 DARK_FOLDER = "./darks"
-OUTPUT_FOLDER = "./dark-library"
+OUTPUT_FOLDER = "./library"
 
 CAMERA_CLOCK_WRONG_UNTIL = datetime(year=2022, month=5, day=13, hour=12)
 CAMERA_DST_OFFSET = timedelta(hours=1)
@@ -23,7 +23,7 @@ temps = {}
 
 p = parser()
 for filename in os.walk(TEMP_FOLDER):
-    if filename.endswith(".txt"):
+    if filename.endswith(".txt"): # txt files are logs; ignore shell/python scripts and .old logs
         with open(filename, 'r') as f:
             for line in f.readlines():
                 time, temp = line.strip().split(" - ")
@@ -38,7 +38,7 @@ for filename in os.listdir(DARK_FOLDER):
 
     # TODO: what format is any of this shit
     iso = exif[ISO_TAG]
-    exp = round(exif[EXP_TAG]) # round to nearest second
+    exp = round(exif[EXP_TAG]/5)*5 # round to nearest five seconds
     time = exif[TIME_TAG]
 
     if time < CAMERA_CLOCK_WRONG_UNTIL:
@@ -48,11 +48,13 @@ for filename in os.listdir(DARK_FOLDER):
     dist: timedelta = abs(time - nearest_key)
     if dist > timedelta(minutes=1):
         print(f"No temperature reading within a minute found for {filename} -- nearest was {dist.total_seconds():.0f} seconds away at {nearest_key}")
+        # TODO: prompt user on what to do
+        print("Skipping file...")
+        continue
 
     temp = temps[nearest_key]
 
     img.close()
-    # TODO: is this how i had these folders nested?
     folder = f"{OUTPUT_FOLDER}/{iso}ISO/{exp}s/{temp}C"
     dst = f"{folder}/{filename}"
     if not os.path.exists(folder):
